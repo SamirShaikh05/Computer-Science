@@ -5,7 +5,7 @@ const app = express();
 
 app.use(express.json())
 
-await mongoose.connect("mongodb://[REDACTED]").then(()=>{
+await mongoose.connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/students").then(()=>{
     console.log("_______connected______");
 })
 
@@ -74,7 +74,7 @@ app.delete('/delete/:id', async(req, res)=>{
 app.listen(3000)
 
 // (async function dbConnection(){
-//     await mongoose.connect("mongodb://[REDACTED]");
+//     await mongoose.connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/students");
 //     const schema = mongoose.Schema({
 //         name: String,
 //         email: String,

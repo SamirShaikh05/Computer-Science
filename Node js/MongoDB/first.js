@@ -3,7 +3,7 @@ import { MongoClient, ObjectId } from 'mongodb'
 const app = express()
 app.set('view engine', 'ejs')
 
-const url = "mongodb://[REDACTED]";
+const url = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/college";
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 

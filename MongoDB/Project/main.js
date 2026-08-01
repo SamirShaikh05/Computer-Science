@@ -4,7 +4,7 @@ import Employee from './models/Employee.js'
 const app = express()
 const port = 3000
 app.set('view engine', 'ejs');
-const conn = mongoose.connect('mongodb://[REDACTED]');
+const conn = mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/company');
 
 const getRandom=(arr)=>{
    let rno=Math.floor(Math.random() * (arr.length-1))
