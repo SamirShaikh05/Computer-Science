@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+model User { 
+  id    Int     @id @default(autoincrement()) 
+  email String  @unique
+  name  String? @db.VarChar(50)
+  age Int?
+  isActive Boolean @default(true)
+  notificationMethods NotificationMethods?
+  blog Bytes?
+  role UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cuidID String? @default(cuid())
+  uuidID String? @default(uuid())
+  nanoID String? @default(nanoid())
+  ulidID String? @default(ulid())
+  blogs Blog[] 
+
+  @@index([name, age, isActive])
+  @@unique([name, age])
+} 
+
+model NotificationMethods {
+  id Int @id @default(autoincrement())
+  phone Int
+  email Boolean
+  User User @relation(fields: [userId], references: [id])
+  userId Int @unique
+}
+
+enum UserRole{
+  ADMIN
+  USER
+}
+
+
+model Video{
+  id Int @id @default(autoincrement())
+  title String @db.Text
+  url_720p String @map("720P")
+  url_1080p String @map("1080P")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Blog {
+  id Int @id @default(autoincrement())
+  title String @db.VarChar(250)
+  content String 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  categories Category[]
+  User User? @relation(fields: [userId], references: [id])
+  userId Int?
+}
+
+model Category {
+  id Int @id @default(autoincrement())
+  name String @db.VarChar(50)
+  blogs Blog[]
+}

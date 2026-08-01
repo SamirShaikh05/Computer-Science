@@ -1,0 +1,13 @@
+{
+  "name": "@Monorepo/utils",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "scripts": {
+    "dev":"tsc --watch",
+    "build":"tsc"
+  },
+  "type": "module",
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}

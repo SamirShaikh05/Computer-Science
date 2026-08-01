@@ -1,0 +1,46 @@
+{
+  "users": [
+    {
+      "name": "Samir",
+      "age": "19",
+      "email": "samir@test.com",
+      "id": "9b59"
+    },
+    {
+      "name": "Aamir",
+      "age": "22",
+      "email": "aamir@test.com",
+      "id": "ec71"
+    },
+    {
+      "name": "Jabir",
+      "age": "26",
+      "email": "jabir@test.com",
+      "id": "96a3"
+    },
+    {
+      "name": "Zafer",
+      "age": "32",
+      "email": "zafer@test.com",
+      "id": "4509"
+    },
+    {
+      "name": "Mahjabeen",
+      "age": "24",
+      "email": "mahaz@test.com",
+      "id": "fbcf"
+    },
+    {
+      "id": "c877",
+      "name": "Aryan",
+      "age": "8",
+      "email": "aryan@test.com"
+    },
+    {
+      "id": "25c0",
+      "name": "Azaan",
+      "age": "2",
+      "email": "azaan@test.com"
+    }
+  ]
+}

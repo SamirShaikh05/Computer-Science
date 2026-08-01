@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students Details</title>
+</head>
+<body>
+    <h1>Here is the details</h1>
+    <table border="1">
+        <tr>
+            <td>Name</td>
+            <td>Age</td>
+            <td>email</td>
+            <td>Option</td>
+        </tr>
+        <% result.forEach(e=>{ %>
+            <tr>
+            <td><%=e.name%></td>
+            <td><%=e.age%></td>
+            <td><%=e.email%></td>
+            <td><a href="/ui/delete/<%= e._id %>">Delete</a></td>
+            <td><a href="/ui/student/<%= e._id %>">Update</a></td>
+            </tr>
+        <% }) %>
+    </table>
+</body>
+</html>

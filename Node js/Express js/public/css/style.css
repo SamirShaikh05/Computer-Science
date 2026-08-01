@@ -1,0 +1,18 @@
+h1 {
+    color: orange;
+}
+h2{
+    color: blue;
+}
+
+a {
+    text-decoration: none;
+    padding: 10px 20px;
+    background: blue;
+    color: white;
+    border-radius: 10px;
+}
+
+a:hover {
+    background: rgb(86, 86, 220);
+}
