@@ -3,7 +3,7 @@ import crypto from 'crypto'
 import jwt from 'jsonwebtoken'
 import 'dotenv/config';
 
-export default async function register(req, res){
+export async function register(req, res){
     const {username, email, password} = req.body;
     const isAlreadyRegistered = await userModel.findOne({
         $or:[
@@ -24,10 +24,23 @@ export default async function register(req, res){
         email,
         password: hashed
     })
-    const token = jwt.sign({
+    const accessToken = jwt.sign({
         id:user._id
     }, process.env.JWT_SECRET,{
-        expiresIn:"1d"
+        expiresIn:"15m"
+    })
+    
+    const refreshToken = jwt.sign({
+        id:user._id
+    }, process.env.JWT_SECRET,{
+        expiresIn:"15d"
+    })
+
+    res.cookie("refreshToken", refreshToken, {
+        httpOnly:true,
+        secure:process.env.NODE_ENV === "production",
+        sameSite:"strict",
+        maxAge: 15 * 24 * 60 * 60 * 1000 // 15 days
     })
 
     res.status(201).json({
@@ -36,6 +49,79 @@ export default async function register(req, res){
             username:user.name,
             email :user.email
         },
-        token
+        accessToken
     })
 }
+
+
+export async function getUser(req, res) {
+    try {
+        const token = req.headers.authorization?.split(" ")[1];
+
+        if (!token) {
+            return res.status(401).json({
+                message: "Token not provided"
+            });
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        const user = await userModel.findById(decoded.id).select("-password");
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        return res.status(200).json({
+            message: "User fetched successfully",
+            user
+        });
+
+    } catch (err) {
+        return res.status(401).json({
+            message: "Invalid or expired token"
+        });
+    }
+}
+
+
+export async function refreshToken(req, res) {
+    try {
+        const refreshToken = req.cookies.refreshToken;
+        if (!refreshToken) {
+            return res.status(401).json({
+                message: "Refresh token not provided"
+            });
+        }
+
+        const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+
+        const accessToken = jwt.sign({
+            id: decoded.id
+        }, process.env.JWT_SECRET, {
+            expiresIn: "15m"
+        });
+        return res.status(200).json({
+            message: "Access token refreshed successfully",
+            accessToken
+        }); 
+        const newRefreshToken = jwt.sign({
+            id: decoded.id
+        }, process.env.JWT_SECRET, {
+            expiresIn: "15d"
+        });
+        res.cookie("refreshToken", newRefreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "strict",
+            maxAge: 15 * 24 * 60 * 60 * 1000 // 15 days
+        });
+    } catch (err) {
+        return res.status(401).json({
+            message: "Invalid or expired refresh token"
+        });
+    }
+}
+
