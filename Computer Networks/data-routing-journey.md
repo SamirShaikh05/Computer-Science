@@ -348,7 +348,7 @@ next hop and creates a new Layer 2 frame for that network.
 
 ## Diagram
 
-![How Routing Determines Your Data's Journey](./docs/data-routing-journey.png)
+![How Routing Determines Your Data's Journey](data-routing-journey.png)
 
 ---
 
@@ -390,30 +390,5 @@ mechanisms such as NAT, firewalls, VLANs, dynamic routing protocols,
 tunneling, load balancers, and cloud-specific networking.
 
 ````
-
-### One thing I'd change in your diagram
-
-The title:
-
-> **How Routing Determines Your Data's Journey Across Networks**
-
-is good, but for a GitHub networking-learning repo I'd use:
-
-**`How Routing Determines a Packet's Journey Across Networks`**
-
-"Packet" is more technically precise than "data" here.
-
-And I'd keep the file as:
-
-```text
-docs/
-└── data-routing-journey.png
-````
-
-with the README section:
-
-## How Routing Determines a Packet's Journey
-
-![Data Routing Journey](data-routing-journey.png)
 
 That makes this look like an actual **networking study note**, rather than simply an exported Eraser diagram.
