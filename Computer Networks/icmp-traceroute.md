@@ -243,7 +243,7 @@ This can happen when different probes take different paths or are handled by dif
 
 Here is the actual terminal output from the experiment:
 
-![Ping, TTL and Traceroute Terminal Output](ping-traceroute-terminal.png)
+![Ping, TTL and Traceroute Terminal Output](ping.png)
 
 A `*` means:
 
