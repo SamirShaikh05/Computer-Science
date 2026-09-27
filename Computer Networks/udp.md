@@ -53,18 +53,9 @@ This is why multiple programs can communicate on the same machine using differen
 
 A UDP datagram includes an **8-byte header** and the payload data.
 
-```text
-┌──────────────────────────────┐
-│          UDP Header          │
-│            8 bytes           │
-├──────────────────────────────┤
-│                              │
-│            Data              │
-│                              │
-└──────────────────────────────┘
-```
+![UDP datagram structure](images/udp_datagram.png)
 
-The UDP header has four main fields:
+The diagram shows the header followed by the application data. Read its four 16-bit fields in order:
 
 | Field | Size |
 | ----- | ---- |
@@ -73,7 +64,9 @@ The UDP header has four main fields:
 | Length | 16 bits |
 | Checksum | 16 bits |
 
-The port numbers help the OS decide which application should receive the data.
+Together, these fields make the UDP header **8 bytes** long. The **source port** identifies the sending application endpoint, and the **destination port** lets the receiving operating system deliver the payload to the appropriate socket. **Length** counts the entire UDP datagram, including the header and payload. **Checksum** helps detect corruption; it does not provide retransmission or guaranteed delivery.
+
+After the header comes the **payload**, the data supplied by the application. IP carries the UDP datagram between hosts, and the destination port is used to deliver that data to the right application on the destination host.
 
 ![UDP Datagram With Ports](images/udp-datagram-with-ports.png)
 
