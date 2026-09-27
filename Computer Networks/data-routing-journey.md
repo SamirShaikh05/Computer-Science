@@ -348,7 +348,7 @@ next hop and creates a new Layer 2 frame for that network.
 
 ## Diagram
 
-![How Routing Determines Your Data's Journey](data-routing-journey.png)
+![How Routing Determines Your Data's Journey](images/data-routing-journey.png)
 
 ---
 

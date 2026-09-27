@@ -4,7 +4,7 @@ A practical networking study note explaining how **ICMP**, **TTL (Time To Live)*
 
 The diagrams and terminal output in this repository are based on a hands-on experiment using Linux.
 
-![ICMP, TTL and Traceroute Overview](icmp-ttl-traceroute-diagram.png)
+![ICMP, TTL and Traceroute Overview](images/icmp-ttl-traceroute-diagram.png)
 
 ---
 
@@ -243,7 +243,7 @@ This can happen when different probes take different paths or are handled by dif
 
 Here is the actual terminal output from the experiment:
 
-![Ping, TTL and Traceroute Terminal Output](ping.png)
+![Ping, TTL and Traceroute Terminal Output](images/ping.png)
 
 A `*` means:
 
