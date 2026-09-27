@@ -1,0 +1,29 @@
+services:
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - 3000:80
+    depends_on:
+      - backend
+
+  backend:
+    build: ./backend
+    container_name: backend
+    ports:
+      - 5000:5000
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8
+    container_name: db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: taskdb
+    volumes:
+        - mysql-data:/var/lib/mysql  
+        - ./databases/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  mysql-data:
