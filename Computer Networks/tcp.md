@@ -1934,15 +1934,3 @@ That is the complete picture: **the TCP segment header is not just a
 collection of fields. Each field exists to solve a specific problem in
 establishing, maintaining, reliably transferring data over, or
 terminating a TCP connection.**
-
-
-Here is the text displayed on the screen:
-
-**MTU (Maximum Transmission Unit)**
-
-* Largest IP packet a link can carry ***without fragmentation***
-* MTU includes **IP header + TCP/UDP header + payload**
-* **Ethernet header is not part of MTU (IMPORTANT)**
-* Ethernet MTU is typically 1500 bytes
-* Different links can have different MTUs
-* Exceeding MTU can cause fragmentation or packet drops
