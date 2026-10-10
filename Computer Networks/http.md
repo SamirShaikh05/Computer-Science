@@ -1,33 +1,35 @@
-# HTTP Evolution: From HTTP/0.9 to HTTP/1.1
+# HTTP Evolution: From HTTP/0.9 to HTTP/2
 
-> These notes follow the supplied diagrams in sequence. They explain how
-> HTTP messages evolved, how HTTP uses TCP connections, how HTTP/1.1
-> reuses connections, how conditional caching with ETags works, and why
-> HTTP/1.1 pipelining can suffer from head-of-line blocking.
->
-> **Scope:** This document ends at the limitations of HTTP/1.1. HTTP/2
-> will be added later as a continuation.
+> These notes follow the lecture diagrams in the order they were introduced. They cover the evolution of HTTP messages, TCP connection reuse, conditional caching, HTTP/1.1 pipelining and head-of-line blocking, and the binary framing and multiplexing model introduced by HTTP/2.
 
-## Contents
+## Quick navigation
 
--   [1. What is HTTP?](#1-what-is-http)
--   [2. HTTP/0.9 --- The one-line
-    protocol](#2-http09--the-one-line-protocol)
--   [3. HTTP/1.0 --- A new TCP connection for each
-    exchange](#3-http10--a-new-tcp-connection-for-each-exchange)
--   [4. HTTP/1.0 Keep-Alive --- Reusing a
-    connection](#4-http10-keep-alive--reusing-a-connection)
--   [5. HTTP/1.1 --- Persistent connections by
-    default](#5-http11--persistent-connections-by-default)
--   [6. Anatomy of an HTTP request](#6-anatomy-of-an-http-request)
--   [7. Anatomy of an HTTP response](#7-anatomy-of-an-http-response)
--   [8. ETag and conditional requests](#8-etag-and-conditional-requests)
--   [9. HTTP/1.1 pipelining](#9-http11-pipelining)
--   [10. Head-of-line blocking: the
-    limitation](#10-head-of-line-blocking-the-limitation)
--   [11. Summary and comparison](#11-summary-and-comparison)
+Use these links to jump directly to a topic. The detailed contents are grouped by protocol version below.
 
-------------------------------------------------------------------------
+**Foundations and HTTP/1.x**
+- [What is HTTP?](#1-what-is-http)
+- [HTTP/0.9: the one-line protocol](#2-http09--the-one-line-protocol)
+- [HTTP/1.0: a new TCP connection for each exchange](#3-http10--a-new-tcp-connection-for-each-exchange)
+- [HTTP/1.0 Keep-Alive](#4-http10-keep-alive--reusing-a-connection)
+- [HTTP/1.1 persistent connections](#5-http11--persistent-connections-by-default)
+- [Anatomy of an HTTP request](#6-anatomy-of-an-http-request)
+- [Anatomy of an HTTP response](#7-anatomy-of-an-http-response)
+- [ETag and conditional requests](#8-etag-and-conditional-requests)
+- [HTTP/1.1 pipelining](#9-http11-pipelining)
+- [Head-of-line blocking](#10-head-of-line-blocking-the-limitation)
+- [HTTP/1.x summary](#11-summary-and-comparison)
+
+**HTTP/2: binary framing and multiplexing**
+- [Multiplexing overview](#12-http2-multiplexing-overview)
+- [Server Push](#13-http2-server-push)
+- [Requests and responses as independent streams](#14-http2-requests-responses-and-stream-ids)
+- [Why HTTP/2 is a binary protocol](#15-why-http2-is-a-binary-protocol)
+- [HTTP/1.1 text request: comparison](#16-http11-text-based-request-format)
+- [HTTP/2 frame header in depth](#17-http2-frame-header-in-depth)
+- [HTTP/2 DATA frames](#18-http2-data-frames)
+- [HTTP/1.1 vs HTTP/2 comparison](#19-http11-vs-http2-summary)
+
+---
 
 ## 1. What is HTTP?
 
@@ -866,11 +868,232 @@ ordering limitation.
     Responses must stay in request order, so a slow first response can
     delay smaller later responses.
 
-### Where these notes stop
+### Transition to HTTP/2
 
-HTTP/1.1 improved connection reuse and introduced richer
-request/response features, but pipelining did not provide independent,
-out-of-order response delivery. That limitation is an important
-motivation for studying what came next.
+HTTP/1.1 made connections reusable, but it retained a text-based message format and did not provide HTTP/2-style independent streams. The next sections continue the progression with HTTP/2 framing, multiplexing, and the way stream identifiers let the receiver associate frames with the correct request or response.
 
-**HTTP/2 will be added as a separate continuation later.**
+------------------------------------------------------------------------
+
+## 12. HTTP/2 multiplexing overview
+
+![HTTP/2 multiplexing: multiple requests and responses over one TCP connection](images/10-http-2-multiplexing-overview.png)
+
+HTTP/2 keeps the idea of reusing a connection, but improves how multiple exchanges share it. Instead of treating the connection as a sequence of complete text messages, HTTP/2 divides communication into **frames** and associates those frames with **streams**.
+
+A browser may request the main HTML document, a user API response, and an image. In the diagram, these requests use stream IDs `1`, `3`, and `5`. Their frames can be interleaved on one TCP connection, rather than requiring each request to wait for the previous response to finish.
+
+### The important terms
+
+- **Connection:** the underlying transport connection. Traditional HTTP/2 runs over TCP, normally protected by TLS in browsers.
+- **Stream:** a logical, independently identified exchange of frames within the connection.
+- **Frame:** the smallest protocol unit of HTTP/2. Every frame has a fixed 9-byte header followed by a payload whose size is described by that header.
+- **Multiplexing:** frames from different streams can be interleaved on the same connection.
+
+### What multiplexing changes
+
+Suppose the browser requests `/index.html`, `/api/users`, and `/image.png`. The server may begin sending image data before the full HTML response is complete, provided the frames are scheduled that way. The browser uses the stream ID to know which response each frame belongs to.
+
+Multiplexing reduces the application-level waiting caused by HTTP/1.1 response ordering. It does **not** create multiple TCP connections, and it does not remove TCP's own ordered-byte-stream behavior: packet loss on the TCP connection can still delay delivery of later bytes on that connection.
+
+------------------------------------------------------------------------
+
+## 13. HTTP/2 Server Push
+
+![HTTP/2 Server Push and proactive resource delivery](images/11-http-2-server-push.png)
+
+HTTP/2 defined a feature called **Server Push**. It allowed a server to send a resource that the browser had not explicitly requested, based on the server's expectation that the resource would soon be needed.
+
+For example, the browser asks for `index.html`. The server might infer that the page will also need `script.js` and `main.css`, and attempt to push those resources without waiting for separate browser requests.
+
+### Why it was introduced
+
+The intended benefit was to reduce the delay of fetching resources discovered while parsing the HTML. In theory, the browser could receive the document and useful dependent resources earlier.
+
+### Why it needs caution
+
+- The server may guess incorrectly about which resources the browser needs.
+- The browser may already have the resource cached, making a push waste bandwidth.
+- Pushed resources consume connection capacity and require cache and prioritization decisions.
+- Server Push has poor practical adoption and is disabled or unsupported in many modern browser/server setups. Do not assume it is available in a current deployment.
+
+Server Push is therefore a historical HTTP/2 capability worth understanding, not a feature to rely on for a new application. Ordinary HTTP/2 multiplexing works independently of Server Push.
+
+------------------------------------------------------------------------
+
+## 14. HTTP/2 requests, responses, and stream IDs
+
+![HTTP/2 requests and response frames multiplexed over a single TCP connection](images/12-http-2-request-response-frames.png)
+
+The diagram combines three requests and their frames on one connection. A request is not necessarily transmitted as one large indivisible block. Its metadata is carried in a `HEADERS` frame, while a request body, if present, can be carried in one or more `DATA` frames. Responses follow the same general framing model.
+
+### Reading the example
+
+| Request | Example stream ID | Frame role |
+|---|---:|---|
+| `POST /api/v1/users` | `1` | Request headers plus JSON data |
+| `GET /api/v1/orders` | `3` | Request headers |
+| `GET /index.html` | `5` | Request headers |
+
+These IDs are illustrative. HTTP/2 stream IDs initiated by a client are odd; stream IDs initiated by a server are even. A stream ID of `0` is reserved for connection-level frames and is not used for an ordinary request/response stream.
+
+The receiver reads each frame's header, identifies its type and stream ID, and routes the payload to the appropriate stream. Frames from different streams may appear between each other on the wire. That is the basis of multiplexing.
+
+### Responses can be interleaved
+
+The server can send response frames for stream `3`, then stream `1`, then stream `5`, subject to protocol rules and scheduling. The client does not infer which request a frame answers from its position alone; it uses the stream ID.
+
+Frames within a stream still have ordering and state requirements. Multiplexing does not mean that bytes within a single stream can be arbitrarily rearranged.
+
+------------------------------------------------------------------------
+
+## 15. Why HTTP/2 is a binary protocol
+
+![HTTP/2 frame bit layout](images/13-http-2-frame-bit-layout.png)
+
+HTTP/1.x represents the start line and headers as readable text. HTTP/2 instead defines a binary framing layer. Its fields have specific byte positions and lengths, so the receiver can parse a frame using the protocol's layout rather than finding text delimiters such as `\r\n`.
+
+### What “binary” means here
+
+All network traffic ultimately travels as bits. Calling HTTP/2 a binary protocol means that **its framing and control fields are defined as binary fields**, not that every application payload must be binary or unreadable. A `DATA` frame may carry JSON text, HTML, image bytes, or other application content.
+
+### Why use a defined frame format?
+
+- **Explicit boundaries:** the payload length tells the receiver how many payload bytes belong to a frame.
+- **Fast, predictable parsing:** the receiver reads fields at defined offsets instead of parsing a textual request line and searching for header delimiters.
+- **Frame types:** the type field tells the receiver how to interpret the payload, such as `DATA`, `HEADERS`, `SETTINGS`, or `WINDOW_UPDATE`.
+- **Stream association:** the stream identifier associates a frame with a logical exchange.
+- **Flags:** the flags field carries type-specific control information, such as whether a `HEADERS` block ends a stream or whether a `DATA` frame ends a stream.
+
+Binary framing is not automatically faster in every situation, and implementations still need parsing logic. The key design improvement is a consistent, explicitly framed protocol structure designed for multiplexing and control.
+
+------------------------------------------------------------------------
+
+## 16. HTTP/1.1 text-based request format
+
+![HTTP/1.1 text request with headers and JSON body](images/14-http-1.1-text-request.png)
+
+This diagram revisits the HTTP/1.1 request format to show what the receiver has to interpret in a text-based protocol. A typical request contains a request line, header lines, an empty line, and an optional body.
+
+```http
+POST /api/v1/users/signup HTTP/1.1
+Host: api.example.app
+Connection: keep-alive
+Content-Type: application/json
+Content-Length: 97
+Accept: application/json
+Origin: https://example.app
+Referer: https://example.app/signup
+Accept-Language: en-GB,en-US;q=0.9,en;q=0.8
+
+{
+  "name": "Shubham Waje",
+  "email": "shubham@example.com",
+  "password": "00000000"
+}
+```
+
+### How the text is separated
+
+- `\r\n` (carriage return followed by line feed) terminates each HTTP/1.1 line.
+- The first line is the request line: method, request target, and HTTP version.
+- Subsequent lines contain headers in the form `Name: value`.
+- An empty line, represented by another `\r\n` after the last header, marks the end of the header section. The sequence after the final header is commonly described as `\r\n\r\n`.
+- The body, when present, follows the empty line. Its framing is determined by the HTTP message rules, including headers such as `Content-Length` or transfer coding where applicable.
+
+A receiver cannot simply split the entire TCP connection into arbitrary chunks and assume each chunk is a complete request. TCP provides a byte stream, so a line or message may arrive across multiple TCP reads. The HTTP implementation must buffer and parse the bytes according to HTTP's message-framing rules.
+
+### Why this differs from HTTP/2
+
+HTTP/1.1's start line and header section use a textual representation. HTTP/2 does not send this textual request syntax on the wire; it uses typed frames, and request metadata is represented in a `HEADERS` frame using HPACK header compression. The semantics remain recognizably HTTP—method, path, authority, and other fields still exist—but the wire representation changes.
+
+------------------------------------------------------------------------
+
+## 17. HTTP/2 frame header in depth
+
+![HTTP/2 HEADERS frame with binary fields and HPACK-encoded header block](images/15-http-2-headers-frame-breakdown.png)
+
+Every HTTP/2 frame begins with a **9-byte frame header**. The diagram shows an example `HEADERS` frame with a payload length of 15 bytes and stream ID `1`.
+
+### The 9-byte frame header
+
+| Field | Size | Meaning |
+|---|---:|---|
+| Length | 24 bits (3 bytes) | Number of payload bytes after the 9-byte header; it does not include the header itself |
+| Type | 8 bits (1 byte) | Identifies the frame type, such as `HEADERS` or `DATA` |
+| Flags | 8 bits (1 byte) | Type-specific flags that modify how the frame is interpreted |
+| Reserved bit + Stream ID | 1 bit + 31 bits (4 bytes total) | The high reserved bit is normally sent as zero; the remaining 31 bits identify the stream |
+
+The 24-bit length field can represent a payload length up to `16,777,215` bytes, although the maximum frame size permitted in a connection is constrained by HTTP/2 settings and protocol rules. The 9-byte header is fixed; the payload length varies by frame.
+
+### Example: a HEADERS frame
+
+The supplied diagram illustrates these values:
+
+- **Payload length:** `15` bytes (`00000000 00000000 00001111`)
+- **Type:** `HEADERS` (`0x01`, or `00000001`)
+- **Flags:** `0` in the illustrated example
+- **Reserved bit:** `0`
+- **Stream ID:** `1`
+- **Payload:** an HPACK-encoded header block in this example
+
+The binary groups are the bit-level representation of the header fields. They are not a textual HTTP request copied into the frame. The `HEADERS` payload is interpreted by the HPACK decoder, which reconstructs the header fields from the compressed header block.
+
+### HPACK is not the same as binary framing
+
+- **Binary framing** tells the receiver where a frame begins and ends, what type it is, which stream it belongs to, and which flags apply.
+- **HPACK** compresses HTTP header fields. It uses a defined representation and a connection-level dynamic table mechanism where applicable.
+
+These are related but distinct parts of HTTP/2. Not every frame payload is HPACK-encoded: that applies to header-block content carried by relevant header frames, not to ordinary `DATA` payloads.
+
+------------------------------------------------------------------------
+
+## 18. HTTP/2 DATA frames
+
+![HTTP/2 DATA frame carrying application data](images/16-http-2-data-frame.png)
+
+A `DATA` frame carries the bytes of an HTTP message body. Those bytes might represent JSON, HTML, an image, or another media type. HTTP/2 does not require the application payload itself to be binary; it transports the payload inside its binary frame structure.
+
+### Reading the supplied DATA frame example
+
+- **Payload length:** `47` bytes (`0x2F`)
+- **Type:** `DATA` (`0x00`)
+- **Flags:** `END_STREAM` is set in the example (`0x01`)
+- **Reserved bit:** `0`
+- **Stream ID:** `1`
+- **Frame payload:** application data
+
+`END_STREAM` means that the sender has no more frames to send in that direction on this stream. It does not mean the entire TCP connection is closed. Other streams can continue using the same connection.
+
+### HEADERS and DATA work together
+
+A typical request with a body may use a `HEADERS` frame for metadata followed by one or more `DATA` frames for the body. The final relevant frame can carry `END_STREAM`. A bodyless request, such as a simple `GET`, may send its headers with `END_STREAM` set, indicating that the request stream's sending side is finished.
+
+A large body can be split across multiple DATA frames. The receiver uses the frame lengths and stream IDs to reassemble the stream's content in order. It does not use the frame boundary as a JSON, HTML, or image boundary; application-level parsing happens after the stream bytes are delivered.
+
+------------------------------------------------------------------------
+
+## 19. HTTP/1.1 vs HTTP/2 summary
+
+| Feature | HTTP/1.1 | HTTP/2 |
+|---|---|---|
+| Wire representation | Textual start line and headers; message body may be arbitrary bytes | Binary frame layer; header fields are represented in header blocks |
+| Message framing | Uses HTTP/1.x line and message-framing rules | Uses frames with a fixed 9-byte header and explicit payload length |
+| Connection reuse | Persistent connections by default | One connection can carry many concurrent logical streams |
+| Multiplexing | No HTTP/2-style multiplexing; pipelining preserves response order | Frames from different streams can be interleaved |
+| Header compression | No equivalent built-in HTTP/2 HPACK mechanism | HPACK compresses header fields |
+| Stream identifiers | No HTTP/2 stream ID field | Each stream has an identifier; `0` is reserved for connection-level frames |
+| Head-of-line blocking | Response ordering in pipelining plus TCP ordered delivery | Removes HTTP/1.1 response-order blocking between streams, but TCP loss can still block later bytes on the connection |
+| Server Push | Not part of HTTP/1.1 | Defined by HTTP/2, but poorly adopted and not supported in many modern deployments |
+
+### Final takeaways
+
+1. **HTTP/1.1 is text-based at the message-control level.** Its request line and headers are separated using CRLF line endings and an empty line before an optional body.
+2. **HTTP/2 uses binary framing.** Every frame has a fixed 9-byte header that describes the payload length, type, flags, and stream ID.
+3. **HTTP/2 still carries ordinary HTTP semantics.** Methods, paths, status codes, and headers still exist, but their on-wire representation is different.
+4. **HPACK compresses header fields.** It is used for header blocks, not for arbitrary DATA payloads.
+5. **Multiplexing is stream-based.** Frames from multiple streams can be interleaved on one TCP connection and associated with their streams using stream IDs.
+6. **A DATA frame carries body bytes.** `END_STREAM` finishes one direction of a stream; it does not close the whole TCP connection.
+7. **HTTP/2 improves HTTP-level concurrency but does not eliminate TCP-level head-of-line blocking.** HTTP/3 addresses that transport limitation by using QUIC rather than TCP.
+
+[Back to quick navigation](#quick-navigation)
+
