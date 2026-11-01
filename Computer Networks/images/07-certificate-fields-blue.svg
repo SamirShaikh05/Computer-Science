@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1146" height="991" viewBox="0 0 1146 991">
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#07366a"/><stop offset="1" stop-color="#001f49"/></linearGradient>
+    <style>
+      .panel{fill:url(#bg);stroke:#c4e6ff;stroke-width:2}
+      .txt{font:27px 'Courier New',monospace;fill:#f1f4ff}
+      .label{fill:#ffd51a;font-weight:bold;text-decoration:underline}
+      .bullet{font-weight:bold}
+      .code{fill:#111;border-radius:7px}
+    </style>
+  </defs>
+  <rect width="1146" height="991" fill="#050c16"/>
+  <rect x="20" y="12" width="1126" height="979" rx="20" fill="#052959" stroke="#0b2848" stroke-width="2"/>
+  <g class="txt">
+    <rect class="panel" x="37" y="30" width="1093" height="65" rx="14"/>
+    <text x="56" y="70"><tspan class="bullet">•</tspan><tspan dx="26" class="label">Version:</tspan><tspan dx="13">3 (X.509 certificate format version, can be 1/2/3)</tspan></text>
+
+    <rect class="panel" x="37" y="102" width="1093" height="88" rx="14"/>
+    <text x="56" y="140"><tspan class="bullet">•</tspan><tspan dx="26" class="label">Serial Number:</tspan><tspan dx="13">positive integer, assigned by the CA,</tspan></text>
+    <text x="94" y="172">maximum 20 bytes</text>
+
+    <rect class="panel" x="37" y="197" width="1093" height="88" rx="14"/>
+    <text x="56" y="235"><tspan class="bullet">•</tspan><tspan dx="26" class="label">Signature Algorithm:</tspan><tspan dx="13">Algos used by the issuer to create</tspan></text>
+    <text x="94" y="267">the certificate’s digital signature e.g. RSA with SHA-256</text>
+
+    <rect class="panel" x="37" y="294" width="1093" height="191" rx="14"/>
+    <text x="56" y="333"><tspan class="bullet">•</tspan><tspan dx="26" class="label">Issuer:</tspan><tspan dx="13">Let’s Encrypt (entity that has signed and issued</tspan></text>
+    <text x="94" y="365">the certificate)</text>
+    <text x="115" y="400">•  Country/Region: US</text>
+    <text x="115" y="435">•  Organisation: Let’s ENcrypt</text>
+    <text x="115" y="470">•  Common Name: YE1</text>
+
+    <rect class="panel" x="37" y="494" width="1093" height="95" rx="14"/>
+    <text x="56" y="531"><tspan class="bullet">•</tspan><tspan dx="26" class="label">Validity:</tspan><tspan dx="13">Time period during which the certificate is valid</tspan></text>
+    <rect x="112" y="541" width="151" height="35" rx="7" fill="#121212"/>
+    <rect x="328" y="541" width="143" height="35" rx="7" fill="#121212"/>
+    <text x="128" y="568">notBefore</text><text x="344" y="568">notAfter</text>
+    <text x="93" y="568">(</text><text x="278" y="568">→</text><text x="478" y="568">)</text>
+
+    <rect class="panel" x="37" y="598" width="1093" height="66" rx="14"/>
+    <text x="56" y="639"><tspan class="bullet">•</tspan><tspan dx="26" class="label">Subject:</tspan><tspan dx="13">CN = ssw.in (Common Name: ssw.in)</tspan></text>
+
+    <rect class="panel" x="37" y="673" width="1093" height="121" rx="14"/>
+    <text x="56" y="712"><tspan class="bullet">•</tspan><tspan dx="26" class="label">Subject Public Key Info:</tspan><tspan dx="13">Carries info about Public Key</tspan></text>
+    <text x="115" y="747">•  <tspan text-decoration="underline">Subject’s Public Key:</tspan> Actual public key of the server</text>
+    <text x="115" y="780">•  <tspan text-decoration="underline">Algorithms:</tspan> Public key’s algo e.g. RSA/ECDSA</text>
+
+    <rect class="panel" x="37" y="803" width="1093" height="174" rx="14"/>
+    <text x="56" y="842"><tspan class="bullet">•</tspan><tspan dx="26" class="label">Extensions:</tspan><tspan dx="13">(Only applicable when Version: 3)</tspan></text>
+    <text x="115" y="877">•  <tspan text-decoration="underline">Subject Alternative Name (SAN):</tspan> Browser checks whether</text>
+    <text x="151" y="909">the hostname it’s connecting to appears in the certificate’s SAN</text>
+    <text x="151" y="943">•  DNS: ssw.in</text>
+    <text x="151" y="974">•  DNS: www.ssw.in</text>
+  </g>
+</svg>
